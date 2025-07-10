@@ -1,0 +1,56 @@
+.real-time-chart {
+  position: relative;
+  width: 100%;
+  background: rgba(10, 10, 10, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid rgba(58, 255, 115, 0.1);
+}
+
+.chart-label {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: #3AFF73;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 2;
+}
+
+.real-time-chart canvas {
+  cursor: crosshair;
+  border-radius: 4px;
+}
+
+.chart-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.9);
+  color: #3AFF73;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 10;
+  border: 1px solid rgba(58, 255, 115, 0.3);
+  backdrop-filter: blur(8px);
+  transform: translateX(-50%);
+  animation: tooltipFadeIn 0.2s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.real-time-chart:hover {
+  border-color: rgba(58, 255, 115, 0.3);
+  box-shadow: 0 0 20px rgba(58, 255, 115, 0.1);
+  transition: all 0.3s ease;
+} 

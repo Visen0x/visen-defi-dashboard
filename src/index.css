@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Inter:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
+
+html, body, #root, .visen-root, .hero-section, body > div {
+  background: #0a0a0a !important;
+  box-shadow: none !important;
+}
+
+body, .visen-root, h1, h2, h3, h4, h5, h6, .cta, .feature-card, .how-step, .usecase-card {
+  margin: 0;
+  font-family: 'Michroma', 'Space Grotesk', 'Inter', Arial, sans-serif !important;
+  background: #0a0a0a;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.michroma-regular {
+  font-family: 'Michroma', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.visen-root, .hero-section {
+  background: none !important;
+  box-shadow: none !important;
+}
