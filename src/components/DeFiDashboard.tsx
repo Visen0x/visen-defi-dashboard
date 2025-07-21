@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { WalletInfo } from '../services/walletService';
+import React, { useState, useEffect } from 'react';
+import { WalletInfo, walletService } from '../services/walletService';
 import WalletConnection from './WalletConnection';
 import StakingInterface from './StakingInterface';
 import SwapInterface from './SwapInterface';
@@ -15,11 +15,56 @@ interface DeFiDashboardProps {
 
 const DeFiDashboard: React.FC<DeFiDashboardProps> = ({ defiActions }) => {
   const [activeTab, setActiveTab] = useState<'wallet' | 'staking' | 'swap' | 'analytics'>('wallet');
-  const [walletInfo, setWalletInfo] = useState<WalletInfo>({
-    connected: false,
-    publicKey: '',
-    balance: 0
+  const [walletInfo, setWalletInfo] = useState<WalletInfo>(() => {
+    // Initialize with current wallet state
+    return walletService.getWalletInfo();
   });
+
+  // Sync with wallet service on mount and when wallet state changes
+  useEffect(() => {
+    const currentWalletInfo = walletService.getWalletInfo();
+    setWalletInfo(currentWalletInfo);
+    
+    // If wallet is already connected, refresh balance immediately
+    if (currentWalletInfo.connected) {
+      refreshWalletBalance();
+    }
+    
+    // Set up polling to keep wallet info in sync
+    const interval = setInterval(() => {
+      const updatedWalletInfo = walletService.getWalletInfo();
+      setWalletInfo(prev => {
+        // Only update if there's a meaningful change
+        if (prev.connected !== updatedWalletInfo.connected || 
+            prev.balance !== updatedWalletInfo.balance ||
+            prev.publicKey !== updatedWalletInfo.publicKey) {
+          return updatedWalletInfo;
+        }
+        return prev;
+      });
+    }, 2000); // Check every 2 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Refresh wallet balance when switching to non-wallet tabs
+  useEffect(() => {
+    if (activeTab !== 'wallet' && walletInfo.connected) {
+      refreshWalletBalance();
+    }
+  }, [activeTab, walletInfo.connected]);
+
+  const refreshWalletBalance = async () => {
+    try {
+      const newBalance = await walletService.refreshBalance();
+      setWalletInfo(prev => ({
+        ...prev,
+        balance: newBalance
+      }));
+    } catch (error) {
+      console.error('Error refreshing balance:', error);
+    }
+  };
 
   const handleWalletConnected = (info: WalletInfo) => {
     setWalletInfo(info);
@@ -59,12 +104,32 @@ const DeFiDashboard: React.FC<DeFiDashboardProps> = ({ defiActions }) => {
                   <strong>{walletInfo.balance.toFixed(4)} SOL</strong>
                 </div>
                 <div className="stat">
+                  <span>Wallet Address</span>
+                  <strong>{walletInfo.publicKey.slice(0, 8)}...{walletInfo.publicKey.slice(-8)}</strong>
+                </div>
+                <div className="stat">
                   <span>Active Positions</span>
                   <strong>0</strong>
                 </div>
                 <div className="stat">
                   <span>Total Rewards Earned</span>
                   <strong>0.0000 SOL</strong>
+                </div>
+                <div style={{ marginTop: '1rem' }}>
+                  <button 
+                    className="refresh-btn"
+                    onClick={refreshWalletBalance}
+                    style={{
+                      background: 'rgba(58, 255, 115, 0.2)',
+                      border: '1px solid rgba(58, 255, 115, 0.3)',
+                      color: '#3AFF73',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '8px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    🔄 Refresh Balance
+                  </button>
                 </div>
               </div>
             )}

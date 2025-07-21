@@ -215,7 +215,7 @@ const App: React.FC = () => {
             <a href="#features" onClick={() => handleNavClick("features")}>Features</a>
             <a href="#how" onClick={() => handleNavClick("how")}>How It Works</a>
             <a href="#usecases" onClick={() => handleNavClick("usecases")}>Use Cases</a>
-          <a href="#docs">Docs</a>
+          <a href="https://visen0x.gitbook.io/visen0x/" target="_blank" rel="noopener noreferrer">Docs</a>
             <a href="https://x.com/Visen_Ai" target="_blank" rel="noopener noreferrer">Twitter</a>
             <a href="/demo" className="nav-launch-btn">Launch App</a>
         </div>
@@ -266,7 +266,7 @@ const App: React.FC = () => {
 
           <FadeContent duration={800} delay={900}>
           <div className="cta-buttons">
-              <a href="#docs" className="cta neon">
+              <a href="https://visen0x.gitbook.io/visen0x/" target="_blank" rel="noopener noreferrer" className="cta neon">
                 <GradientText colors={["#0a0a0a", "#1a1a1a"]} animationSpeed={3}>
                   Explore the Docs
                 </GradientText>
@@ -449,7 +449,7 @@ const App: React.FC = () => {
               </GradientText>
             </a>
           <div className="links">
-            <a href="#github">GitHub</a> | <a href="#cli">CLI/Docs</a>
+            <a href="#github">GitHub</a> | <a href="https://visen0x.gitbook.io/visen0x/" target="_blank" rel="noopener noreferrer">CLI/Docs</a>
           </div>
           </FadeContent>
         </section>
@@ -489,9 +489,10 @@ const App: React.FC = () => {
                             <a href={
                               link === "Twitter" ? "https://x.com/Visen_Ai" :
                               link === "GitHub" ? "https://github.com" :
+                              link === "Documentation" ? "https://visen0x.gitbook.io/visen0x/" :
                               `#${link.toLowerCase().replace(/\s+/g, '-')}`
                             } 
-                            {...(link === "Twitter" || link === "GitHub" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                            {...(link === "Twitter" || link === "GitHub" || link === "Documentation" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                             >
                               {link}
                             </a>

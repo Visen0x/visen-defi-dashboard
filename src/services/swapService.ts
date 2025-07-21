@@ -1,4 +1,4 @@
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { walletService } from './walletService';
 
 export interface Token {
@@ -71,6 +71,7 @@ class SwapService {
 
   constructor() {
     this.connection = walletService.getConnection();
+    console.log('🔄 SwapService initialized with QuickNode RPC');
   }
 
   // Get supported tokens
@@ -78,7 +79,7 @@ class SwapService {
     return this.tokens;
   }
 
-  // Get quote for token swap
+  // Get real quote for token swap using Jupiter API
   async getSwapQuote(
     inputMint: string,
     outputMint: string,
@@ -93,35 +94,44 @@ class SwapService {
         throw new Error('Token not supported');
       }
 
-      // Convert amount to smallest unit
+      // Convert amount to smallest unit (lamports/micro-tokens)
       const inputAmount = Math.floor(amount * Math.pow(10, inputToken.decimals));
 
+      console.log(`🔄 Getting quote: ${amount} ${inputToken.symbol} → ${outputToken.symbol}`);
+
       const response = await fetch(
-        `${this.jupiterApiUrl}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${inputAmount}&slippageBps=${slippageBps}`
+        `${this.jupiterApiUrl}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${inputAmount}&slippageBps=${slippageBps}&onlyDirectRoutes=false&asLegacyTransaction=false`
       );
 
       if (!response.ok) {
-        throw new Error('Failed to get quote');
+        const errorText = await response.text();
+        console.error('Jupiter API error:', errorText);
+        throw new Error(`Failed to get quote: ${response.status} ${response.statusText}`);
       }
 
       const quoteData = await response.json();
+      console.log('📊 Quote received:', quoteData);
+
+      const outputAmount = parseInt(quoteData.outAmount) / Math.pow(10, outputToken.decimals);
+      const priceImpact = parseFloat(quoteData.priceImpactPct || '0');
+      const fee = parseFloat(quoteData.platformFee || '0') / Math.pow(10, 9); // Convert lamports to SOL
 
       return {
         inputMint,
         outputMint,
         inputAmount: amount,
-        outputAmount: parseInt(quoteData.outAmount) / Math.pow(10, outputToken.decimals),
-        priceImpact: parseFloat(quoteData.priceImpactPct || '0'),
-        fee: parseFloat(quoteData.platformFee || '0'),
-        route: quoteData.routePlan?.map((step: any) => step.swapInfo?.label) || []
+        outputAmount,
+        priceImpact,
+        fee,
+        route: quoteData.routePlan?.map((step: any) => step.swapInfo?.label || 'Unknown') || []
       };
     } catch (error) {
-      console.error('Error getting swap quote:', error);
-      throw error;
+      console.error('❌ Error getting swap quote:', error);
+      throw new Error(`Failed to get swap quote: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  // Execute token swap
+  // Execute real token swap using Jupiter API
   async executeSwap(
     inputMint: string,
     outputMint: string,
@@ -136,61 +146,117 @@ class SwapService {
     }
 
     try {
-      // Get quote first
-      const quote = await this.getSwapQuote(inputMint, outputMint, amount, slippageBps);
+      console.log(`🔄 Executing swap: ${amount} tokens`);
       
-      // Get swap transaction from Jupiter
+      // First get a fresh quote
+      const inputToken = this.tokens.find(t => t.address === inputMint);
+      const outputToken = this.tokens.find(t => t.address === outputMint);
+      
+      if (!inputToken || !outputToken) {
+        throw new Error('Token not supported');
+      }
+
+      const inputAmount = Math.floor(amount * Math.pow(10, inputToken.decimals));
+
+      // Get quote
+      const quoteResponse = await fetch(
+        `${this.jupiterApiUrl}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${inputAmount}&slippageBps=${slippageBps}&onlyDirectRoutes=false&asLegacyTransaction=false`
+      );
+
+      if (!quoteResponse.ok) {
+        throw new Error(`Failed to get quote: ${quoteResponse.status}`);
+      }
+
+      const quoteData = await quoteResponse.json();
+      console.log('📊 Fresh quote for swap:', quoteData);
+
+      // Get swap transaction
       const swapResponse = await fetch(`${this.jupiterApiUrl}/swap`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          quoteResponse: quote,
+          quoteResponse: quoteData,
           userPublicKey: walletInfo.publicKey,
           wrapAndUnwrapSol: true,
-          dynamicComputeUnitLimit: true,
-          prioritizationFeeLamports: 'auto'
+          computeUnitPriceMicroLamports: 'auto',
+          asLegacyTransaction: false
         }),
       });
 
       if (!swapResponse.ok) {
-        throw new Error('Failed to get swap transaction');
+        const errorText = await swapResponse.text();
+        console.error('Jupiter swap API error:', errorText);
+        throw new Error(`Failed to get swap transaction: ${swapResponse.status}`);
       }
 
       const swapData = await swapResponse.json();
+      console.log('📡 Swap transaction received');
+
+      // Handle both legacy and versioned transactions
+      let transaction: Transaction | VersionedTransaction;
       
-      // Deserialize transaction
-      const transaction = Transaction.from(Buffer.from(swapData.swapTransaction, 'base64'));
-      
-      // Sign transaction with user's wallet
-      const signedTransaction = await wallet.signTransaction(transaction);
-      
+      if (swapData.swapTransaction) {
+        // This is a versioned transaction - use Uint8Array instead of Buffer for browser compatibility
+        const swapTransactionBuf = Uint8Array.from(atob(swapData.swapTransaction), c => c.charCodeAt(0));
+        transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+      } else {
+        throw new Error('No transaction data received from Jupiter');
+      }
+
+      console.log('📝 Signing transaction...');
+
+      // Sign transaction
+      let signedTransaction;
+      if (transaction instanceof VersionedTransaction) {
+        signedTransaction = await wallet.signTransaction(transaction);
+      } else {
+        signedTransaction = await wallet.signTransaction(transaction);
+      }
+
+      console.log('📡 Sending transaction...');
+
       // Send transaction
-      const signature = await this.connection.sendRawTransaction(
-        signedTransaction.serialize(),
-        {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed'
-        }
-      );
+      const rawTransaction = signedTransaction.serialize();
+      const signature = await this.connection.sendRawTransaction(rawTransaction, {
+        skipPreflight: false,
+        preflightCommitment: 'processed'
+      });
+
+      console.log(`⏳ Confirming transaction: ${signature}`);
 
       // Wait for confirmation
-      await this.connection.confirmTransaction(signature);
+      const latestBlockHash = await this.connection.getLatestBlockhash();
+      const confirmation = await this.connection.confirmTransaction({
+        signature,
+        blockhash: latestBlockHash.blockhash,
+        lastValidBlockHeight: latestBlockHash.lastValidBlockHeight
+      });
+
+      if (confirmation.value.err) {
+        throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
+      }
+
+      const outputAmount = parseInt(quoteData.outAmount) / Math.pow(10, outputToken.decimals);
+      const fee = parseFloat(quoteData.platformFee || '0') / Math.pow(10, 9);
+
+      console.log(`✅ Swap completed: ${signature}`);
 
       return {
         signature,
-        inputAmount: quote.inputAmount,
-        outputAmount: quote.outputAmount,
-        fee: quote.fee
+        inputAmount: amount,
+        outputAmount,
+        fee
       };
+      
     } catch (error) {
-      console.error('Swap execution error:', error);
-      throw error;
+      console.error('❌ Swap execution error:', error);
+      throw new Error(`Swap failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  // Get token balance for user
+  // Get real token balance for user
   async getTokenBalance(tokenMint: string): Promise<number> {
     const walletInfo = walletService.getWalletInfo();
     
@@ -218,10 +284,10 @@ class SwapService {
 
       const tokenAccount = tokenAccounts.value[0];
       const balance = tokenAccount.account.data.parsed.info.tokenAmount.uiAmount;
-      
+
       return balance || 0;
     } catch (error) {
-      console.error('Error getting token balance:', error);
+      console.error('❌ Error getting token balance:', error);
       return 0;
     }
   }
@@ -237,28 +303,42 @@ class SwapService {
           balances[token.symbol] = balance;
         }
       } catch (error) {
-        console.error(`Error getting balance for ${token.symbol}:`, error);
+        console.error(`❌ Error getting balance for ${token.symbol}:`, error);
       }
     }
     
     return balances;
   }
 
-  // Calculate price impact warning
+  // Get price impact warning message
   getPriceImpactWarning(priceImpact: number): string {
     if (priceImpact > 5) {
-      return 'High price impact - consider reducing trade size';
+      return 'High price impact! Consider reducing swap amount.';
     } else if (priceImpact > 2) {
-      return 'Moderate price impact';
-    } else if (priceImpact > 0.5) {
-      return 'Low price impact';
+      return 'Moderate price impact. Please review before proceeding.';
+    } else {
+      return 'Low price impact. Good swap conditions.';
     }
-    return 'Minimal price impact';
   }
 
   // Get token info by address
   getTokenInfo(address: string): Token | undefined {
     return this.tokens.find(token => token.address === address);
+  }
+
+  // Get conversion rate between two tokens
+  async getConversionRate(
+    inputMint: string,
+    outputMint: string,
+    amount: number = 1
+  ): Promise<number> {
+    try {
+      const quote = await this.getSwapQuote(inputMint, outputMint, amount, 50);
+      return quote.outputAmount / quote.inputAmount;
+    } catch (error) {
+      console.error('❌ Error getting conversion rate:', error);
+      return 0;
+    }
   }
 }
 

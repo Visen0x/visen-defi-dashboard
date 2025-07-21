@@ -111,7 +111,7 @@ body, .visen-root {
 .features-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: 320px 320px;
+  grid-template-rows: auto auto;
   column-gap: 2rem;
   row-gap: 6rem;
   margin-top: 3rem;
@@ -124,12 +124,12 @@ body, .visen-root {
 
 /* Enhanced Feature Cards */
 .feature-item {
-  height: 320px;
+  min-height: 360px;
   width: 100%;
 }
 
 .feature-glare-card {
-  height: 320px;
+  min-height: 360px;
   border: 1px solid rgba(58, 255, 115, 0.2);
   transition: all 0.3s ease;
 }
@@ -141,7 +141,7 @@ body, .visen-root {
 
 .feature-card-enhanced {
   padding: 2rem;
-  height: 320px;
+  min-height: 360px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -202,8 +202,8 @@ body, .visen-root {
 
 .feature-description-enhanced {
   color: #b0b0b0;
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-size: 0.9rem;
+  line-height: 1.5;
   margin: 0;
   flex-grow: 1;
 }
@@ -622,6 +622,19 @@ body, .visen-root {
   .features-grid, .usecases-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+
+  .feature-item {
+    min-height: 320px;
+  }
+
+  .feature-glare-card {
+    min-height: 320px;
+  }
+
+  .feature-card-enhanced {
+    min-height: 320px;
+    padding: 1.5rem;
   }
 
   .how-step {

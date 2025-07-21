@@ -6,7 +6,8 @@ import {
   SystemProgram,
   LAMPORTS_PER_SOL,
   Authorized,
-  Lockup
+  Lockup,
+  Keypair
 } from '@solana/web3.js';
 import { walletService } from './walletService';
 
@@ -29,7 +30,7 @@ export interface ValidatorInfo {
 class StakingService {
   private connection: Connection;
   
-  // Popular and reliable validators
+  // Popular and reliable validators on Solana mainnet
   private validators: ValidatorInfo[] = [
     {
       publicKey: '7Np41oeYqPefeNQEHSv1UDhYrehxin3NStELsSKCT4K2',
@@ -51,11 +52,26 @@ class StakingService {
       commission: 6,
       apy: 6.8,
       totalStaked: 1800000
+    },
+    {
+      publicKey: 'MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD',
+      name: 'Marinade Native',
+      commission: 0,
+      apy: 7.0,
+      totalStaked: 3200000
+    },
+    {
+      publicKey: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',
+      name: 'Jito',
+      commission: 5,
+      apy: 7.5,
+      totalStaked: 2800000
     }
   ];
 
   constructor() {
     this.connection = walletService.getConnection();
+    console.log('🏦 StakingService initialized with QuickNode RPC');
   }
 
   // Get available validators
@@ -63,7 +79,7 @@ class StakingService {
     return this.validators;
   }
 
-  // Create stake account (user maintains full control)
+  // Create real stake account
   async createStakeAccount(
     amount: number, 
     validatorPublicKey: string
@@ -80,23 +96,32 @@ class StakingService {
     }
 
     if (amount > walletInfo.balance) {
-      throw new Error('Insufficient balance');
+      throw new Error('Insufficient SOL balance');
+    }
+
+    // Minimum stake requirement
+    if (amount < 0.001) {
+      throw new Error('Minimum stake amount is 0.001 SOL');
     }
 
     try {
+      console.log(`🏦 Creating stake account for ${amount} SOL...`);
+      
       const userPublicKey = new PublicKey(walletInfo.publicKey);
       const validatorPubkey = new PublicKey(validatorPublicKey);
       
-      // Create a new stake account
-      const stakeAccount = new PublicKey(
-        Math.random().toString(36).substring(2, 15) + 
-        Math.random().toString(36).substring(2, 15)
-      );
+      // Create a new stake account keypair
+      const stakeAccountKeypair = Keypair.generate();
+      const stakeAccount = stakeAccountKeypair.publicKey;
 
-      const lamports = amount * LAMPORTS_PER_SOL;
+      const lamports = Math.floor(amount * LAMPORTS_PER_SOL);
+      
+      // Get minimum balance for rent exemption
       const minimumRent = await this.connection.getMinimumBalanceForRentExemption(
         StakeProgram.space
       );
+
+      console.log(`💰 Stake amount: ${lamports} lamports + ${minimumRent} rent`);
 
       // Create transaction
       const transaction = new Transaction();
@@ -121,7 +146,7 @@ class StakingService {
         })
       );
 
-      // Delegate stake
+      // Delegate stake to validator
       transaction.add(
         StakeProgram.delegate({
           stakePubkey: stakeAccount,
@@ -130,30 +155,56 @@ class StakingService {
         })
       );
 
-      // Get recent blockhash
-      const { blockhash } = await this.connection.getLatestBlockhash();
+      // Get recent blockhash and set fee payer
+      const { blockhash } = await this.connection.getLatestBlockhash('confirmed');
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = userPublicKey;
 
+      console.log('📝 Signing transaction...');
+      
       // Sign transaction with user's wallet
       const signedTransaction = await wallet.signTransaction(transaction);
       
+      // Also sign with the stake account keypair
+      signedTransaction.partialSign(stakeAccountKeypair);
+
+      console.log('📡 Sending transaction...');
+      
       // Send transaction
       const signature = await this.connection.sendRawTransaction(
-        signedTransaction.serialize()
+        signedTransaction.serialize(),
+        {
+          skipPreflight: false,
+          preflightCommitment: 'confirmed'
+        }
       );
 
-      // Wait for confirmation
-      await this.connection.confirmTransaction(signature);
+      console.log(`⏳ Confirming transaction: ${signature}`);
 
+      // Wait for confirmation
+      const confirmation = await this.connection.confirmTransaction({
+        signature,
+        blockhash,
+        lastValidBlockHeight: (await this.connection.getLatestBlockhash()).lastValidBlockHeight
+      });
+
+      if (confirmation.value.err) {
+        throw new Error(`Transaction failed: ${confirmation.value.err}`);
+      }
+
+      console.log(`✅ Stake account created successfully: ${signature}`);
       return signature;
+
     } catch (error) {
-      console.error('Staking error:', error);
-      throw error;
+      console.error('❌ Staking error:', error);
+      if (error instanceof Error) {
+        throw new Error(`Staking failed: ${error.message}`);
+      }
+      throw new Error('Staking failed: Unknown error');
     }
   }
 
-  // Get user's stake accounts
+  // Get user's real stake accounts
   async getUserStakeAccounts(): Promise<StakeAccount[]> {
     const walletInfo = walletService.getWalletInfo();
     
@@ -163,6 +214,8 @@ class StakingService {
 
     try {
       const userPublicKey = new PublicKey(walletInfo.publicKey);
+      
+      console.log('🔍 Fetching stake accounts...');
       
       // Get all stake accounts for the user
       const stakeAccounts = await this.connection.getParsedProgramAccounts(
@@ -179,15 +232,24 @@ class StakingService {
         }
       );
 
-      return stakeAccounts.map(account => ({
-        publicKey: account.pubkey.toString(),
-        balance: account.account.lamports / LAMPORTS_PER_SOL,
-        state: this.getStakeState(account.account.data),
-        validator: this.getValidatorFromAccount(account.account.data),
-        rewards: 0 // Would need additional API calls to calculate exact rewards
-      }));
+      console.log(`📊 Found ${stakeAccounts.length} stake accounts`);
+
+      return stakeAccounts.map(account => {
+        const data = account.account.data;
+        const parsed = 'parsed' in data ? data.parsed : null;
+        const info = parsed?.info;
+        
+        return {
+          publicKey: account.pubkey.toString(),
+          balance: account.account.lamports / LAMPORTS_PER_SOL,
+          state: this.getStakeState(info),
+          validator: this.getValidatorName(info?.stake?.delegation?.voter),
+          rewards: 0 // Would need additional API calls to calculate exact rewards
+        };
+      });
+
     } catch (error) {
-      console.error('Error fetching stake accounts:', error);
+      console.error('❌ Error fetching stake accounts:', error);
       return [];
     }
   }
@@ -202,6 +264,8 @@ class StakingService {
     }
 
     try {
+      console.log(`🔄 Deactivating stake account: ${stakeAccountPublicKey}`);
+      
       const userPublicKey = new PublicKey(walletInfo.publicKey);
       const stakeAccount = new PublicKey(stakeAccountPublicKey);
 
@@ -215,8 +279,8 @@ class StakingService {
         })
       );
 
-      // Get recent blockhash
-      const { blockhash } = await this.connection.getLatestBlockhash();
+      // Get recent blockhash and set fee payer
+      const { blockhash } = await this.connection.getLatestBlockhash('confirmed');
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = userPublicKey;
 
@@ -226,10 +290,14 @@ class StakingService {
         signedTransaction.serialize()
       );
 
+      // Wait for confirmation
       await this.connection.confirmTransaction(signature);
+      
+      console.log(`✅ Stake account deactivated: ${signature}`);
       return signature;
+
     } catch (error) {
-      console.error('Deactivation error:', error);
+      console.error('❌ Deactivation error:', error);
       throw error;
     }
   }
@@ -244,9 +312,11 @@ class StakingService {
     }
 
     try {
+      console.log(`💰 Withdrawing from stake account: ${stakeAccountPublicKey}`);
+      
       const userPublicKey = new PublicKey(walletInfo.publicKey);
       const stakeAccount = new PublicKey(stakeAccountPublicKey);
-
+      
       // Get stake account info
       const stakeAccountInfo = await this.connection.getAccountInfo(stakeAccount);
       if (!stakeAccountInfo) {
@@ -265,8 +335,8 @@ class StakingService {
         })
       );
 
-      // Get recent blockhash
-      const { blockhash } = await this.connection.getLatestBlockhash();
+      // Get recent blockhash and set fee payer
+      const { blockhash } = await this.connection.getLatestBlockhash('confirmed');
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = userPublicKey;
 
@@ -276,30 +346,46 @@ class StakingService {
         signedTransaction.serialize()
       );
 
+      // Wait for confirmation
       await this.connection.confirmTransaction(signature);
+      
+      console.log(`✅ Stake withdrawal completed: ${signature}`);
       return signature;
+
     } catch (error) {
-      console.error('Withdrawal error:', error);
+      console.error('❌ Withdrawal error:', error);
       throw error;
     }
   }
 
   // Helper methods
-  private getStakeState(data: any): 'active' | 'inactive' | 'activating' | 'deactivating' {
-    // This would need proper parsing of stake account data
-    // For now, return a default state
-    return 'active';
+  private getStakeState(info: any): 'active' | 'inactive' | 'activating' | 'deactivating' {
+    if (!info) return 'inactive';
+    
+    const stake = info.stake;
+    if (!stake) return 'inactive';
+    
+    if (stake.delegation) {
+      if (stake.delegation.deactivationEpoch === '18446744073709551615') {
+        return 'active';
+      } else {
+        return 'deactivating';
+      }
+    }
+    
+    return 'activating';
   }
 
-  private getValidatorFromAccount(data: any): string {
-    // This would need proper parsing of stake account data
-    // For now, return the first validator
-    return this.validators[0].publicKey;
+  private getValidatorName(voterPubkey: string): string {
+    if (!voterPubkey) return 'Unknown';
+    
+    const validator = this.validators.find(v => v.publicKey === voterPubkey);
+    return validator ? validator.name : voterPubkey.slice(0, 8) + '...';
   }
 
   // Calculate estimated rewards
   calculateEstimatedRewards(amount: number, apy: number, days: number): number {
-    return (amount * apy / 100) * (days / 365);
+    return (amount * (apy / 100) * days) / 365;
   }
 }
 
