@@ -94,7 +94,7 @@ const DeFiDashboard: React.FC<DeFiDashboardProps> = ({ defiActions }) => {
       case 'analytics':
         return (
           <div className="defi-placeholder">
-            <div className="placeholder-icon">📊</div>
+            <div className="placeholder-icon">⚬</div>
             <h3>Portfolio Analytics</h3>
             <p>View your DeFi portfolio performance and analytics.</p>
             {walletInfo.connected && (
@@ -128,7 +128,7 @@ const DeFiDashboard: React.FC<DeFiDashboardProps> = ({ defiActions }) => {
                       cursor: 'pointer'
                     }}
                   >
-                    🔄 Refresh Balance
+                    ↻ Refresh Balance
                   </button>
                 </div>
               </div>
@@ -158,19 +158,19 @@ const DeFiDashboard: React.FC<DeFiDashboardProps> = ({ defiActions }) => {
           className={`tab-button ${activeTab === 'staking' ? 'active' : ''}`}
           onClick={() => setActiveTab('staking')}
         >
-          🏦 Staking
+          ◊ Staking
         </button>
         <button
           className={`tab-button ${activeTab === 'swap' ? 'active' : ''}`}
           onClick={() => setActiveTab('swap')}
         >
-          🔄 Swap
+          ↔ Swap
         </button>
         <button
           className={`tab-button ${activeTab === 'analytics' ? 'active' : ''}`}
           onClick={() => setActiveTab('analytics')}
         >
-          📊 Analytics
+          ⚬ Analytics
         </button>
       </div>
 

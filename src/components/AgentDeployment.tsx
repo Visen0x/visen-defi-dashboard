@@ -44,13 +44,13 @@ const AgentDeployment: React.FC<AgentDeploymentProps> = ({ onClose, onDeploy }) 
       value: 'processor', 
       label: 'Data Processor', 
       description: 'Handles data processing and transformation tasks',
-      icon: '🔄'
+      icon: '↻'
     },
     { 
       value: 'coordinator', 
       label: 'Task Coordinator', 
       description: 'Manages and orchestrates multiple agent tasks',
-      icon: '🎯'
+      icon: '◎'
     },
     { 
       value: 'auditor', 
@@ -62,7 +62,7 @@ const AgentDeployment: React.FC<AgentDeploymentProps> = ({ onClose, onDeploy }) 
       value: 'analyzer', 
       label: 'Market Analyzer', 
       description: 'Analyzes market data and trends',
-      icon: '📊'
+      icon: '⚬'
     }
   ];
 
@@ -226,7 +226,7 @@ const AgentDeployment: React.FC<AgentDeploymentProps> = ({ onClose, onDeploy }) 
                     onClick={() => setConfig({ ...config, securityLevel: level as any })}
                   >
                     <span className="security-icon">
-                      {level === 'high' ? '🔒' : level === 'medium' ? '🔐' : '🔓'}
+                      {level === 'high' ? '◉' : level === 'medium' ? '◎' : '○'}
                     </span>
                     <span className="security-label">{level.charAt(0).toUpperCase() + level.slice(1)}</span>
                   </div>

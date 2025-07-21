@@ -491,7 +491,7 @@ const AppDemo: React.FC = () => {
     <div className="empty-state">
       <FadeContent duration={1000} delay={200}>
         <div className="empty-state-content">
-          <div className="empty-state-icon">🤖</div>
+          <div className="empty-state-icon">◊</div>
           <h2 className="empty-state-title">
             <GradientText colors={["#3AFF73", "#40ffaa", "#3AFF73"]} animationSpeed={6}>
               No Agents Deployed
@@ -605,11 +605,11 @@ const AppDemo: React.FC = () => {
             <FadeContent duration={600} delay={200}>
               <div className="tab-navigation">
                 {[
-                  { key: 'dashboard', label: 'Dashboard', icon: '📊' },
-                  { key: 'agents', label: 'Agents', icon: '🤖' },
-                  { key: 'security', label: 'Security', icon: '🛡️' },
-                  { key: 'analytics', label: 'Analytics', icon: '📈' },
-                  { key: 'defi', label: 'DeFi', icon: '💎' }
+                      { key: 'dashboard', label: 'Dashboard', icon: '⚬' },
+    { key: 'agents', label: 'Agents', icon: '◊' },
+                  { key: 'security', label: 'Security', icon: '◉' },
+                  { key: 'analytics', label: 'Analytics', icon: '↗' },
+                  { key: 'defi', label: 'DeFi', icon: '◈' }
                 ].map(tab => (
                   <button
                     key={tab.key}
@@ -638,7 +638,7 @@ const AppDemo: React.FC = () => {
                       </h3>
                       <div className="stats-grid">
                         <div className="stat-card">
-                          <div className="stat-icon">🤖</div>
+                          <div className="stat-icon">◊</div>
                           <div className="stat-info">
                             <div className="stat-value">
                               <CountUp to={stats.totalAgents} duration={2} onStart={() => {}} onEnd={() => {}} />
@@ -648,7 +648,7 @@ const AppDemo: React.FC = () => {
                         </div>
 
                         <div className="stat-card">
-                          <div className="stat-icon active">⚡</div>
+                          <div className="stat-icon active">◎</div>
                           <div className="stat-info">
                             <div className="stat-value">
                               <CountUp to={stats.activeAgents} duration={2} onStart={() => {}} onEnd={() => {}} />
@@ -658,7 +658,7 @@ const AppDemo: React.FC = () => {
                         </div>
 
                         <div className="stat-card">
-                          <div className="stat-icon">✅</div>
+                          <div className="stat-icon">✓</div>
                           <div className="stat-info">
                             <div className="stat-value">
                               <CountUp to={stats.successfulTasks} duration={2} onStart={() => {}} onEnd={() => {}} />
@@ -668,7 +668,7 @@ const AppDemo: React.FC = () => {
                         </div>
 
                         <div className="stat-card">
-                          <div className="stat-icon">🔒</div>
+                          <div className="stat-icon">◉</div>
                           <div className="stat-info">
                             <div className="stat-value">
                               <CountUp to={stats.securityThreats} duration={2} onStart={() => {}} onEnd={() => {}} />
@@ -724,12 +724,12 @@ const AppDemo: React.FC = () => {
                         </button>
 
                         <button className="action-btn" onClick={handleViewAnalytics}>
-                          <span className="action-icon">📊</span>
+                          <span className="action-icon">⚬</span>
                           View Analytics
                         </button>
 
                         <button className="action-btn" onClick={handleSystemSettings}>
-                          <span className="action-icon">⚙️</span>
+                          <span className="action-icon">•</span>
                           System Settings
                         </button>
                       </div>

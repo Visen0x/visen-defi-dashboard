@@ -55,7 +55,7 @@ const StakingInterface: React.FC<StakingInterfaceProps> = ({ walletInfo }) => {
       
       const signature = await stakingService.createStakeAccount(amount, validatorPublicKey);
       
-      alert(`✅ Staking successful!\n\nValidator: ${validatorName}\nAmount: ${amount} SOL\nTransaction: ${signature}\n\nYour stake will be active in the next epoch (~2 days).`);
+      alert(`[SUCCESS] Staking successful!\n\nValidator: ${validatorName}\nAmount: ${amount} SOL\nTransaction: ${signature}\n\nYour stake will be active in the next epoch (~2 days).`);
       
       // Reset form
       setStakeAmount('');

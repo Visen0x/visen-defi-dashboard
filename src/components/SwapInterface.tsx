@@ -43,7 +43,7 @@ const SwapInterface: React.FC<SwapInterfaceProps> = ({ walletInfo }) => {
 
     setIsSwapping(true);
     try {
-      console.log(`🔄 Swapping ${amount} ${fromToken} to ${toToken}...`);
+      console.log(`[SWAP] Swapping ${amount} ${fromToken} to ${toToken}...`);
       
       const fromTokenData = tokens.find(t => t.symbol === fromToken);
       const toTokenData = tokens.find(t => t.symbol === toToken);
@@ -91,7 +91,7 @@ const SwapInterface: React.FC<SwapInterfaceProps> = ({ walletInfo }) => {
         swapQuote.amount
       );
       
-      alert(`✅ Swap successful!\n\nTransaction: ${result.signature}\n\nSwapped ${swapQuote.amount} ${swapQuote.fromToken} for ${result.outputAmount.toFixed(6)} ${swapQuote.toToken}`);
+      alert(`[SUCCESS] Swap successful!\n\nTransaction: ${result.signature}\n\nSwapped ${swapQuote.amount} ${swapQuote.fromToken} for ${result.outputAmount.toFixed(6)} ${swapQuote.toToken}`);
       
       // Reset form
       setFromAmount('');
@@ -164,7 +164,7 @@ const SwapInterface: React.FC<SwapInterfaceProps> = ({ walletInfo }) => {
   if (!walletInfo.connected) {
     return (
       <div className="defi-placeholder">
-        <div className="placeholder-icon">🔄</div>
+        <div className="placeholder-icon">↔</div>
         <h3>Token Swap</h3>
         <p>Please connect your wallet to access token swap features.</p>
       </div>
@@ -174,7 +174,7 @@ const SwapInterface: React.FC<SwapInterfaceProps> = ({ walletInfo }) => {
   return (
     <div className="defi-interface">
       <div className="interface-header">
-        <h3>🔄 Token Swap</h3>
+        <h3>↔ Token Swap</h3>
         <p>Swap tokens using Jupiter DEX aggregator</p>
       </div>
 

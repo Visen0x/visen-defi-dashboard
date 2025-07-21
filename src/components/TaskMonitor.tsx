@@ -38,11 +38,11 @@ const TaskMonitor: React.FC<TaskMonitorProps> = ({ agentId }) => {
 
   const getTaskIcon = (type: AgentTask['type']) => {
     switch (type) {
-      case 'monitor_transactions': return '💰';
-      case 'analyze_defi': return '📊';
-      case 'security_audit': return '🔒';
-      case 'liquidity_optimization': return '💧';
-      default: return '⚙️';
+          case 'monitor_transactions': return '$';
+    case 'analyze_defi': return '⚬';
+    case 'security_audit': return '◉';
+              case 'liquidity_optimization': return '~';
+        default: return '•';
     }
   };
 
