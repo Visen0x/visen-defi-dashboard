@@ -471,7 +471,7 @@ const App: React.FC = () => {
               </GradientText>
             </a>
           <div className="links">
-            <a href="#github">GitHub</a> | <a href="https://visen0x.gitbook.io/visen0x/" target="_blank" rel="noopener noreferrer">CLI/Docs</a>
+            <a href="https://github.com/Visen0x/visen-defi-dashboard" target="_blank" rel="noopener noreferrer">GitHub</a> | <a href="https://visen0x.gitbook.io/visen0x/" target="_blank" rel="noopener noreferrer">CLI/Docs</a>
           </div>
           </FadeContent>
         </section>
