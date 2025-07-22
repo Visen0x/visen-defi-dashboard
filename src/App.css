@@ -854,3 +854,153 @@ h1, h2, h3, h4, h5, h6 {
 html {
   scroll-behavior: smooth;
 }
+
+/* Contact Modal Styles */
+.contact-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeInOverlay 0.3s ease;
+}
+
+.contact-modal {
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(30, 30, 30, 0.95));
+  border: 1px solid rgba(58, 255, 115, 0.3);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 0 40px rgba(58, 255, 115, 0.2);
+  animation: slideInModal 0.4s ease;
+  position: relative;
+}
+
+.contact-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(58, 255, 115, 0.2);
+}
+
+.contact-modal-header h3 {
+  color: #3AFF73;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 0 0 10px rgba(58, 255, 115, 0.4);
+}
+
+.contact-modal-close {
+  background: none;
+  border: none;
+  color: #bbb;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.contact-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #3AFF73;
+  transform: scale(1.1);
+}
+
+.contact-modal-content {
+  color: #e0e0e0;
+  line-height: 1.6;
+}
+
+.contact-modal-content p {
+  margin-bottom: 1.5rem;
+  color: #bbb;
+}
+
+.contact-email {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(58, 255, 115, 0.1);
+  border: 1px solid rgba(58, 255, 115, 0.3);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.contact-email:hover {
+  background: rgba(58, 255, 115, 0.15);
+  border-color: rgba(58, 255, 115, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(58, 255, 115, 0.2);
+}
+
+.contact-email span {
+  font-size: 1.5rem;
+}
+
+.contact-email a {
+  color: #3AFF73;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: color 0.3s ease;
+}
+
+.contact-email a:hover {
+  color: #40ffaa;
+  text-shadow: 0 0 8px rgba(58, 255, 115, 0.4);
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInModal {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Mobile responsive for contact modal */
+@media (max-width: 480px) {
+  .contact-modal {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .contact-modal-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .contact-email {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+}

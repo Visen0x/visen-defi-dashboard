@@ -157,10 +157,9 @@ const useCases = [
 
 const footerLinks = [
   { section: "Product", links: ["Features", "How it Works", "Use Cases", "Documentation"] },
-  { section: "Community", links: ["GitHub", "Twitter"] },
-  { section: "Company", links: ["About", "Contact"] },
+  { section: "Community", links: ["GitHub", "X"] },
+  { section: "Company", links: ["Contact"] },
 ];
-
 
 
 const App: React.FC = () => {
@@ -168,6 +167,7 @@ const App: React.FC = () => {
   const [contentHeight, setContentHeight] = useState(window.innerHeight);
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [expandedUseCase, setExpandedUseCase] = useState<number | null>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   useEffect(() => {
     const updateHeight = () => {
@@ -184,6 +184,28 @@ const App: React.FC = () => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleFooterNavClick = (link: string) => {
+    if (link === "Contact") {
+      setShowContactModal(true);
+      return;
+    }
+
+    // Handle navigation links
+    const linkMap: { [key: string]: string } = {
+      "Features": "features",
+      "How it Works": "how",
+      "Use Cases": "usecases"
+    };
+    
+    const sectionId = linkMap[link];
+    if (sectionId) {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
 
@@ -216,7 +238,7 @@ const App: React.FC = () => {
             <a href="#how" onClick={() => handleNavClick("how")}>How It Works</a>
             <a href="#usecases" onClick={() => handleNavClick("usecases")}>Use Cases</a>
           <a href="https://visen0x.gitbook.io/visen0x/" target="_blank" rel="noopener noreferrer">Docs</a>
-            <a href="https://x.com/Visen_Ai" target="_blank" rel="noopener noreferrer">Twitter</a>
+            <a href="https://x.com/Visen0x" target="_blank" rel="noopener noreferrer">X</a>
             <a href="/app" className="nav-launch-btn">Launch App</a>
         </div>
       </nav>
@@ -486,16 +508,51 @@ const App: React.FC = () => {
                       <ul>
                         {section.links.map((link, j) => (
                           <li key={j}>
-                            <a href={
-                              link === "Twitter" ? "https://x.com/Visen_Ai" :
-                              link === "GitHub" ? "https://github.com" :
-                              link === "Documentation" ? "https://visen0x.gitbook.io/visen0x/" :
-                              `#${link.toLowerCase().replace(/\s+/g, '-')}`
-                            } 
-                            {...(link === "Twitter" || link === "GitHub" || link === "Documentation" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                            >
-                              {link}
-                            </a>
+                            {link === "X" ? (
+                              <a 
+                                href="https://x.com/Visen0x" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                              >
+                                {link}
+                              </a>
+                            ) : link === "GitHub" ? (
+                              <a 
+                                href="https://github.com/Visen0x/visen-defi-dashboard" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                              >
+                                {link}
+                              </a>
+                            ) : link === "Documentation" ? (
+                              <a 
+                                href="https://visen0x.gitbook.io/visen0x/" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                              >
+                                {link}
+                              </a>
+                            ) : link === "Contact" ? (
+                              <a 
+                                href="#" 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleFooterNavClick(link);
+                                }}
+                              >
+                                {link}
+                              </a>
+                            ) : (
+                              <a 
+                                href="#" 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleFooterNavClick(link);
+                                }}
+                              >
+                                {link}
+                              </a>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -512,6 +569,30 @@ const App: React.FC = () => {
             </div>
           </FadeContent>
         </footer>
+
+        {/* Contact Modal */}
+        {showContactModal && (
+          <div className="contact-modal-overlay" onClick={() => setShowContactModal(false)}>
+            <div className="contact-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="contact-modal-header">
+                <h3>Contact Us</h3>
+                <button 
+                  className="contact-modal-close" 
+                  onClick={() => setShowContactModal(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="contact-modal-content">
+                <p>Get in touch with our team for support or inquiries:</p>
+                <div className="contact-email">
+                  <span>📧</span>
+                  <a href="mailto:support@visen.tech">support@visen.tech</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
