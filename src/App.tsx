@@ -217,7 +217,7 @@ const App: React.FC = () => {
             <a href="#usecases" onClick={() => handleNavClick("usecases")}>Use Cases</a>
           <a href="https://visen0x.gitbook.io/visen0x/" target="_blank" rel="noopener noreferrer">Docs</a>
             <a href="https://x.com/Visen_Ai" target="_blank" rel="noopener noreferrer">Twitter</a>
-            <a href="/demo" className="nav-launch-btn">Launch App</a>
+            <a href="/app" className="nav-launch-btn">Launch App</a>
         </div>
       </nav>
       </FadeContent>
@@ -271,7 +271,7 @@ const App: React.FC = () => {
                   Explore the Docs
                 </GradientText>
               </a>
-              <a href="/demo" className="cta outline">Launch App</a>
+              <a href="/app" className="cta outline">Launch App</a>
           </div>
           </FadeContent>
         </section>
@@ -443,7 +443,7 @@ const App: React.FC = () => {
         {/* Final CTA Section */}
         <section className="final-cta-section" id="app">
           <FadeContent duration={1000} delay={200}>
-            <a href="/demo" className="cta neon big">
+            <a href="/app" className="cta neon big">
               <GradientText colors={["#0a0a0a", "#1a1a1a"]} animationSpeed={4}>
                 Start Building Secure AI Today
               </GradientText>

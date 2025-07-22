@@ -18,7 +18,7 @@ root.render(
       <Router>
         <Routes>
           <Route path="/" element={<App />} />
-          <Route path="/demo" element={<AppDemo />} />
+          <Route path="/app" element={<AppDemo />} />
         </Routes>
       </Router>
     </ChakraProvider>
